@@ -7,6 +7,12 @@
 //
 
 #import "AppDelegate.h"
+#import "MainViewController.h"
+#import "LeftViewController.h"
+#import "rightViewController.h"
+#import "SinaWeibo.h"
+#import "CONSTS.h"
+#import "ThemeManager.h"
 
 @implementation AppDelegate
 
@@ -16,12 +22,50 @@
     [super dealloc];
 }
 
+//初始化微博对象
+- (void)_initSinaWeibo
+{
+    _sinaweibo = [[SinaWeibo alloc] initWithAppKey:kAppKey appSecret:kAppSecret appRedirectURI:kAppRedirectURI andDelegate:_mainCtrl];
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSDictionary *sinaweiboInfo = [defaults objectForKey:@"SinaWeiboAuthData"];
+    if ([sinaweiboInfo objectForKey:@"AccessTokenKey"] && [sinaweiboInfo objectForKey:@"ExpirationDateKey"] && [sinaweiboInfo objectForKey:@"UserIDKey"])
+    {
+        _sinaweibo.accessToken = [sinaweiboInfo objectForKey:@"AccessTokenKey"];
+        _sinaweibo.expirationDate = [sinaweiboInfo objectForKey:@"ExpirationDateKey"];
+        _sinaweibo.userID = [sinaweiboInfo objectForKey:@"UserIDKey"];
+    }
+}
+
+- (void)setTheme
+{
+   NSString *themeName = [[NSUserDefaults standardUserDefaults] objectForKey:kThemeName];
+   [[ThemeManager shareInstance] setThemeName:themeName];
+}
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     self.window = [[[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]] autorelease];
-    // Override point for customization after application launch.
+    
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
+   
+   // 设置主题
+   [self setTheme];
+    
+    _mainCtrl = [[MainViewController alloc]init];
+    LeftViewController *leftCtrl = [[LeftViewController alloc]init];
+    rightViewController *righrCtrl =[[rightViewController alloc]init];
+   
+    // 初始化左右菜单
+    _menuCtrl =[[DDMenuController alloc]initWithRootViewController:_mainCtrl];
+    _menuCtrl.leftViewController =leftCtrl;
+    _menuCtrl.rightViewController = righrCtrl;
+   
+   //初始化微博对象
+    [self _initSinaWeibo];
+   
+    self.window.rootViewController = _menuCtrl;
+      
     return YES;
 }
 
